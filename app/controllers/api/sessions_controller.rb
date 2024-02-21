@@ -1,11 +1,7 @@
 # typed: ignore
 module Api
   class SessionsController < BaseController
-    def cancel_login
-      cancel_service = Auths::CancelLoginService.new
-      result = cancel_service.cancel
-      render json: result, status: result[:success] ? :ok : :unprocessable_entity
-    end
+    before_action :authorize_request, only: [:update_session_expiration]
 
     def create
       email = params[:email]
@@ -39,6 +35,31 @@ module Api
         render json: { error: "Unauthorized" }, status: :unauthorized
       end
     end
+
+    def update_session_expiration
+      session_token = params[:session_token]
+      maintain_session = params[:maintain_session]
+
+      unless session_token
+        return render json: { error: 'Session token not found.' }, status: :unprocessable_entity
+      end
+
+      unless [true, false].include?(maintain_session)
+        return render json: { error: 'Maintain session must be a boolean.' }, status: :unprocessable_entity
+      end
+
+      service = Services::SessionService.new
+      message = service.update_session_expiration(session_token: session_token, maintain_session: maintain_session)
+      user = User.find_by(session_token: session_token)
+      render json: { status: 200, message: message, session_expiration: user.session_expiration }, status: :ok
+    rescue StandardError => e
+      render json: { error: e.message }, status: :internal_server_error
+    end
+
+    def cancel_login
+      cancel_service = Auths::CancelLoginService.new
+      result = cancel_service.cancel
+      render json: result, status: result[:success] ? :ok : :unprocessable_entity
+    end
   end
 end
-

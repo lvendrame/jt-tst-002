@@ -10,6 +10,11 @@ class ApplicationPolicy
   end
 
   class Scope
+    def update_session_expiration?
+      !user.nil?
+    end
+
+    # Other policy methods below
     def initialize(user, scope)
       @user = user
       @scope = scope
