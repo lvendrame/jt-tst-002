@@ -57,11 +57,38 @@ module Api
       render json: { error: e.message }, status: :internal_server_error
     end
 
-    def cancel_login
-      user_id = params.require(:user_id)
+    def login_failure
+      email = params[:email]
+      error_message = params[:error_message]
 
-      unless User.exists?(user_id)
-        render json: { error: I18n.t('activerecord.errors.messages.invalid_user_id') }, status: :unprocessable_entity
+      if email.blank?
+        return render json: { error: I18n.t('activerecord.errors.messages.blank') }, status: :bad_request
+      elsif error_message.blank?
+        return render json: { error: I18n.t('activerecord.errors.messages.blank') }, status: :bad_request
+      end
+
+      handle_login_failure = UserAuthenticationService::HandleLoginFailure.new(email, error_message)
+      result = handle_login_failure.call
+
+      if result[:error]
+        render json: { error: result[:error] }, status: :unprocessable_entity
+      else
+        render json: { status: 200, message: "Login failure recorded." }, status: :ok
+      end
+    end
+
+    def cancel_login
+      user_id = params[:user_id]
+
+      if user_id.present?
+        unless User.exists?(user_id)
+          render json: { error: I18n.t('activerecord.errors.messages.invalid_user_id') }, status: :unprocessable_entity
+          return
+        end
+      else
+        cancel_service = Auths::CancelLoginService.new
+        result = cancel_service.cancel
+        render json: result, status: result[:success] ? :ok : :unprocessable_entity
         return
       end
 

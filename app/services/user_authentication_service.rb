@@ -1,31 +1,28 @@
+
 module UserAuthenticationService
   class HandleLoginFailure
-    def initialize(email, password)
+    def initialize(email, error_message)
       @email = email
-      @password = password
+      @error_message = error_message
     end
 
     def call
-      return { error: I18n.t('activerecord.errors.messages.blank') } if email.blank? || password.blank?
+      return { status: 400, error: "Email is required." } if email.blank?
+      return { status: 400, error: "Error message is required." } if error_message.blank?
 
-      user = User.find_by(email: email)
-      if user.nil?
-        log_failed_attempt
-        return { error: I18n.t('devise.failure.not_found_in_database', authentication_keys: 'Email') }
-      end
+      log_failed_attempt
 
-      unless user.valid_password?(password)
-        log_failed_attempt
-        return { error: I18n.t('devise.failure.invalid', authentication_keys: 'Email') }
-      end
+      { status: 200, message: "Login failure recorded." }
     end
 
     private
 
-    attr_reader :email, :password
+    attr_reader :email, :error_message
 
+    # Log the failed login attempt here
     def log_failed_attempt
-      # Log the failed login attempt here
+      # Assuming there is a model called LoginFailure to record login failures
+      LoginFailure.create(email: email, error_message: error_message)
     end
   end
 
