@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   # ... other routes ...
 
   namespace :api do
+    post 'login', to: 'sessions#create'
     post 'sessions/cancel_login', to: 'sessions#cancel_login'
   end
   # ... other routes ...
