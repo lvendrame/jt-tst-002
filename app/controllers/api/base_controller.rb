@@ -1,3 +1,4 @@
+
 # typed: ignore
 module Api
   class BaseController < ActionController::API
@@ -42,6 +43,13 @@ module Api
 
     def base_render_record_not_unique
       render json: { message: I18n.t('common.errors.record_not_uniq_error') }, status: :forbidden
+    end
+
+    def base_render_validation_error(exception)
+      error_messages = exception.record.errors.messages.map do |attribute, messages|
+        { attribute: attribute, messages: messages.map { |message| I18n.t("activerecord.errors.messages.#{message}") } }
+      end
+      render json: { message: I18n.t('common.errors.validation_error'), errors: error_messages }, status: :unprocessable_entity
     end
 
     def custom_token_initialize_values(resource, client)

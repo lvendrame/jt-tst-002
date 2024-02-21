@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   # ... other routes ...
 
   namespace :api do
+    # Routes from the existing code
     post 'login', to: 'sessions#create'
     put 'session_expiration', to: 'sessions#update_session_expiration'
     post 'login_failure', to: 'sessions#login_failure'
@@ -16,6 +17,9 @@ Rails.application.routes.draw do
     # The 'sessions/cancel_login' route is kept from the new code.
     post 'sessions/cancel_login', to: 'sessions#cancel_login'
     post 'password_reset_requests', to: 'password_resets#create'
+
+    # Routes from the new code
+    post 'stylist_requests', to: 'stylist_requests#create'
   end
   # ... other routes ...
 end
