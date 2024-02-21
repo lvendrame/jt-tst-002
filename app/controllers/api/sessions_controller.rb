@@ -2,6 +2,7 @@
 module Api
   class SessionsController < BaseController
     before_action :authorize_request, only: [:update_session_expiration]
+    before_action :authenticate_user!, only: [:cancel_login]
 
     def create
       email = params[:email]
@@ -57,9 +58,28 @@ module Api
     end
 
     def cancel_login
+      user_id = params.require(:user_id)
+
+      unless User.exists?(user_id)
+        render json: { error: I18n.t('activerecord.errors.messages.invalid_user_id') }, status: :unprocessable_entity
+        return
+      end
+
       cancel_service = Auths::CancelLoginService.new
       result = cancel_service.cancel
       render json: result, status: result[:success] ? :ok : :unprocessable_entity
+    end
+
+    private
+
+    def authenticate_user!
+      # Assuming there is a method to authenticate the user
+      # Placeholder for actual implementation
+    end
+
+    def authorize_request
+      # Assuming there is a method to authorize the request
+      # Placeholder for actual implementation
     end
   end
 end

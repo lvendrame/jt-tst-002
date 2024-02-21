@@ -1,32 +1,39 @@
+
 # frozen_string_literal: true
 
 module Auths
   class CancelLoginService
+    attr_reader :user_id
+
+    def initialize(user_id)
+      @user_id = user_id
+    end
+
     def cancel
-      # Assuming there is a method to check and terminate ongoing authentication processes
-      terminate_authentication_process if ongoing_authentication?
+      user = User.find_by(id: user_id)
+      return { error: 'User not found.', status: 404 } unless user
 
-      # Assuming there is a method to log the cancellation event
-      log_cancellation_event
-
-      { success: true, message: 'Login process cancelled successfully' }
+      if ongoing_authentication?(user)
+        terminate_authentication_process(user)
+        log_cancellation_event(user)
+        { success: true, message: 'Login process cancelled successfully' }
+      else
+        { error: 'No ongoing authentication process found.', status: 422 }
+      end
     end
 
     private
 
-    def ongoing_authentication?
-      # Logic to check for ongoing authentication processes
-      # This could involve checking active session tokens or authentication tokens
-      # Placeholder for actual implementation
+    def ongoing_authentication?(user)
+      user.session_token.present? && user.session_expiration > Time.current
     end
 
-    def terminate_authentication_process
-      # Logic to terminate ongoing authentication processes
-      # Placeholder for actual implementation
+    def terminate_authentication_process(user)
+      user.update(session_token: nil, session_expiration: Time.current)
     end
 
-    def log_cancellation_event
-      # Logic to log the cancellation event
+    def log_cancellation_event(user)
+      # Logic to log the cancellation event for the given user
       # This could be writing to a log file or creating an audit record in the database
       # Placeholder for actual implementation
     end
