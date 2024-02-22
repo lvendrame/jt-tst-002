@@ -57,6 +57,22 @@ module Api
       render json: { error: e.message }, status: :internal_server_error
     end
 
+    def maintain_session
+      session_token = params[:session_token]
+      user = User.find_by(session_token: session_token)
+
+      if user && user.has_ongoing_authentication? && !user.stylist?
+        user.update!(session_expiration: 90.days.from_now)
+        message = 'Session has been maintained.'
+      else
+        message = 'Session is still valid.'
+      end
+
+      render json: { status: 200, message: message, session_expiration: user&.session_expiration }, status: :ok
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: 'Session token not found.' }, status: :not_found
+    end
+
     def login_failure
       email = params[:email]
       error_message = params[:error_message]
