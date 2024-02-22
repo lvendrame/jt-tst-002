@@ -1,9 +1,12 @@
 
 module UserAuthenticationService
   class HandleLoginFailure
-    def initialize(email, error_message)
+    attr_reader :email, :error_message, :ip_address
+
+    def initialize(email, error_message, ip_address)
       @email = email
       @error_message = error_message
+      @ip_address = ip_address
     end
 
     def call
@@ -11,18 +14,25 @@ module UserAuthenticationService
       return { status: 400, error: "Error message is required." } if error_message.blank?
 
       log_failed_attempt
+      log_failed_login_attempt
 
       { status: 200, message: "Login failure recorded." }
     end
 
-    private
+    private 
 
-    attr_reader :email, :error_message
-
-    # Log the failed login attempt here
     def log_failed_attempt
-      # Assuming there is a model called LoginFailure to record login failures
       LoginFailure.create(email: email, error_message: error_message)
+    end
+
+    def log_failed_login_attempt
+      user = User.find_by(email: email)
+      LoginAttempt.create(
+        user_id: user&.id,
+        attempted_at: Time.current,
+        success: false,
+        ip_address: ip_address
+      )
     end
   end
 
