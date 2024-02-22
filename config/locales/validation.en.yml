@@ -1,3 +1,4 @@
+
 ---
 en:
   activerecord:
@@ -24,4 +25,8 @@ en:
         datetime_in_future: must be after the date and time today
         invalid: is invalid
         date_type: must be a valid date
+        invalid_user_id: is not a valid user
+        invalid_stylist_id: is not a valid stylist
+        blank_request_details: can't be blank - please provide the request details
+        pending_request_status: must be set to pending initially
         datetime_type: must be a valid date and time
